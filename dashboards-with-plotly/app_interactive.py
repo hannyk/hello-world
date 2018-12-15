@@ -19,6 +19,10 @@ df2 = pd.read_csv(
 
 available_indicators = df2['Indicator Name'].unique()
 
+all_options = {
+    'America': ['New York City', 'San Francisco', 'Cincinnati'],
+    'Canada': [u'Montréal', 'Toronto', 'Ottawa']
+}
 
 external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css']
 # go to css tutorial to find out about changing the style of the dashboard
@@ -82,7 +86,21 @@ app.layout = html.Div([
         max=df2['Year'].max(),
         value=df2['Year'].max(),
         marks={str(year): str(year) for year in df2['Year'].unique()}
-    )
+    ),
+
+    dcc.RadioItems(
+        id='countries-dropdown',
+        options=[{'label': k, 'value': k} for k in all_options.keys()],
+        value='America'
+    ),
+
+    html.Hr(),
+
+    dcc.RadioItems(id='cities-dropdown'),
+
+    html.Hr(),
+
+    html.Div(id='display-selected-values')
 ])
 
 
@@ -162,6 +180,28 @@ def update_graph(xaxis_column_name, yaxis_column_name,
             hovermode='closest'
         )
     }
+
+
+@app.callback(
+    Output('cities-dropdown', 'options'),
+    [Input('countries-dropdown', 'value')])
+def set_cities_options(selected_country):
+    return [{'label': i, 'value': i} for i in all_options[selected_country]]
+
+
+@app.callback(
+    Output('cities-dropdown', 'value'),
+    [Input('cities-dropdown', 'options')])
+def set_cities_value(available_options):
+    return available_options[0]['value']
+
+
+@app.callback(
+    Output('display-selected-values', 'children'),
+    [Input('countries-dropdown', 'value'),
+     Input('cities-dropdown', 'value')])
+def set_display_children(selected_country, selected_city):
+    return u'{} is a city in {}'.format(selected_city, selected_country)
 
 
 if __name__ == '__main__':
